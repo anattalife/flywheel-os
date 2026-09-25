@@ -1,0 +1,31 @@
+{
+  "name": "flywheel-os",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Trade-neutral operating system for service businesses: memory, playbooks and intelligence around the growth flywheel.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:api": "tsx watch src/api/server.ts",
+    "dev:worker": "tsx watch src/worker/main.ts",
+    "build": "tsc -p tsconfig.json && node scripts/copy-assets.mjs",
+    "start:api": "node dist/api/server.js",
+    "start:worker": "node dist/worker/main.js",
+    "migrate": "tsx src/db/migrate.ts",
+    "migrate:prod": "node dist/db/migrate.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --import ./tests/setup.ts --test --test-concurrency=1 tests/*.test.ts"
+  },
+  "dependencies": {
+    "pg": "^8.13.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

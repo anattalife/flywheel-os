@@ -1,0 +1,52 @@
+# One Lightsail instance runs api + worker + caddy. The database is Lightsail's
+# managed Postgres in production (set DATABASE_URL in .env); the `local` profile
+# starts a Postgres container for development instead.
+services:
+  api:
+    build: .
+    command: ["node", "dist/api/server.js"]
+    env_file: .env
+    restart: unless-stopped
+    expose: ["3000"]
+    volumes: [uploads:/app/data]
+
+  worker:
+    build: .
+    command: ["node", "dist/worker/main.js"]
+    env_file: .env
+    restart: unless-stopped
+    volumes: [uploads:/app/data]
+
+  migrate:
+    build: .
+    command: ["node", "dist/db/migrate.js"]
+    env_file: .env
+    profiles: ["tools"]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+
+  db:
+    image: postgres:16
+    profiles: ["local"]
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: flywheel
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+volumes:
+  uploads:
+  caddy_data:
+  caddy_config:
+  pgdata:

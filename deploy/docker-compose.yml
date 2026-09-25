@@ -1,0 +1,59 @@
+# Everything on one Lightsail server: database, app, background worker and HTTPS.
+# Used by deploy/install.sh and deploy/update.sh; you don't need to run it by hand.
+name: flywheel
+
+x-app: &app
+  build: ..
+  env_file: ../.env
+  restart: unless-stopped
+  volumes: [uploads:/app/data]
+  depends_on:
+    db: { condition: service_healthy }
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: flywheel
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    <<: *app
+    restart: "no"
+    command: ["node", "dist/db/migrate.js"]
+    profiles: ["tools"]
+
+  api:
+    <<: *app
+    command: ["node", "dist/api/server.js"]
+    expose: ["3000"]
+
+  worker:
+    <<: *app
+    command: ["node", "dist/worker/main.js"]
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [api]
+
+volumes:
+  pgdata:
+  uploads:
+  caddy_data:
+  caddy_config:

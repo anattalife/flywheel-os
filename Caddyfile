@@ -1,0 +1,27 @@
+{
+	email {$ACME_EMAIL}
+	# Certificates for customers' own domains are issued on first visit, but only
+	# after the app confirms the domain belongs to a business.
+	on_demand_tls {
+		ask http://api:3000/internal/domain-check
+	}
+}
+
+(app) {
+	@internal path /internal/*
+	respond @internal 404
+	reverse_proxy api:3000
+}
+
+# The platform's own domain (owner app, API, webhooks).
+{$APP_DOMAIN} {
+	import app
+}
+
+# Any customer domain pointed at this server.
+https:// {
+	tls {
+		on_demand
+	}
+	import app
+}
