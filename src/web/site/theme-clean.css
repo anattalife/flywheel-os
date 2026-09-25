@@ -1,0 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap");
+/* Clean: white, quiet, one strong accent. */
+:root { --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif; --font-head: var(--font-body); --head-weight: 800;
+  --bg: #FFFFFF; --band: #F4F6F5; --line: #E1E6E4; --ink: #121716; --muted: #56605D; --radius: 14px; --btn-radius: 10px; }

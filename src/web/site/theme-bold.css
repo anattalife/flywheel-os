@@ -1,0 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&display=swap");
+/* Bold: dark hero, big type, hard edges. For trades that sell on confidence. */
+:root { --font-body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif; --font-head: var(--font-body); --head-weight: 900;
+  --bg: #FFFFFF; --band: #F2F2EF; --line: #DEDDD6; --ink: #111418; --muted: #5A5F66; --radius: 6px; --btn-radius: 4px;
+  --hero-bg: #12161C; --hero-ink: #FFFFFF; --hero-muted: #B9C0C9; }
+.hero h1 { text-transform: uppercase; letter-spacing: -0.01em; }
+.site-head { background: #12161C; border-color: #12161C; }
+.site-head .brand, .site-head .head-phone { color: #FFFFFF; }

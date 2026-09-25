@@ -1,0 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Lora:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap");
+/* Soft: warm paper, serif headings, round corners. For wellness, care and teaching. */
+:root { --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif; --font-head: "Lora", Georgia, serif; --head-weight: 600;
+  --bg: #FBFAF7; --band: #F1EFEA; --line: #E3DFD6; --ink: #22201C; --muted: #6A655C; --radius: 22px; --btn-radius: 999px; --hero-bg: #F1EFEA; }
