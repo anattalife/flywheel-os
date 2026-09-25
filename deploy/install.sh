@@ -25,15 +25,7 @@ if [ "$mem_kb" -lt 3000000 ] && ! swapon --show | grep -q .; then
   grep -q '^/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
 fi
 
-if [ -f .env ]; then
-  say "2/6  Settings: already set up (.env exists), keeping them"
-  FIRST=no
-else
-  FIRST=yes
-  say "2/6  A few questions"
-  echo "Your domain must already point at this server (an A record for it, and one for www)."
-  read -rp "Domain for your business (like mybusiness.com): " DOMAIN
-  DOMAIN=$(echo "$DOMAIN" | tr 'A-Z' 'a-z' | sed -E 's#^https?://##; s#/.*$##; s#^www\.##')
+ask_account() {
   read -rp "Business name: " BIZ
   read -rp "Your email (your login): " EMAIL
   while true; do
@@ -43,8 +35,27 @@ else
   read -rp "Your mobile number, 10 digits (for reset codes; Enter to skip): " MOBILE
   MOBILE=$(echo "$MOBILE" | tr -cd '0-9'); [ ${#MOBILE} -eq 11 ] && MOBILE=${MOBILE:1}
   [ ${#MOBILE} -eq 10 ] && MOBILE="+1$MOBILE" || MOBILE=""
-  read -rp "Time zone [America/Detroit]: " TZONE; TZONE=${TZONE:-America/Detroit}
+  while true; do
+    read -rp "Time zone (press Enter for America/Detroit): " TZONE
+    TZONE=$(echo "${TZONE:-America/Detroit}" | tr -d '[]"'"'"' ')
+    [ -f "/usr/share/zoneinfo/$TZONE" ] && break
+    echo "\"$TZONE\" isn't a time zone name. Examples: America/New_York, America/Chicago, America/Denver, America/Los_Angeles"
+  done
+}
 
+if [ -f .env ]; then
+  say "2/6  Settings: already saved in .env, keeping them"
+  DOMAIN=$(grep '^PUBLIC_BASE_URL=' .env | cut -d/ -f3)
+else
+  say "2/6  A few questions"
+  echo "Your domain must already point at this server."
+  read -rp "Domain for your business (like mybusiness.com): " DOMAIN
+  DOMAIN=$(echo "$DOMAIN" | tr 'A-Z' 'a-z' | tr -d ' []' | sed -E 's#^https?://##; s#/.*$##; s#^www\.##')
+fi
+FIRST=no
+[ -f .installed ] || { FIRST=yes; ask_account; }
+
+if [ ! -f .env ]; then
   rnd() { openssl rand -hex 32; }
   PG=$(rnd); APPPW=$(rnd)
   cat > .env <<ENV
@@ -97,7 +108,8 @@ if [ "$FIRST" = yes ]; then
       headers: { "content-type": "application/json", authorization: "Bearer " + e.ADMIN_TOKEN },
       body: JSON.stringify({ name: e.BIZ, timezone: e.TZONE, custom_domain: e.DOMAIN, owner }) })
     .then(async (r) => { const b = await r.json(); if (!r.ok) { console.error("Could not create your login:", b.error || b); process.exit(1); } console.log("Your account is ready."); });
-  '
+  ' || { echo "Nothing was lost. Fix what it says above, then run the same command again."; exit 1; }
+  touch .installed
 fi
 
 say "6/6  Nightly backups"
@@ -107,7 +119,6 @@ CRON
 chmod +x deploy/*.sh
 echo "Every night at 3:15, kept 14 days, in /var/backups/flywheel"
 
-DOMAIN=$(grep '^PUBLIC_BASE_URL=' .env | cut -d/ -f3)
 say "Done!"
 echo "  Your website:   https://$DOMAIN"
 echo "  Your app:       https://$DOMAIN/app   (sign in with your email and password)"
